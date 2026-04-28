@@ -1,37 +1,37 @@
-import asyncio
-import logging
-from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
+import telebot
+from telebot import types
 
-# Настройка логов, чтобы видеть работу бота в панели Render
-logging.basicConfig(level=logging.INFO)
+# Твой токен подставил сам
+bot = telebot.TeleBot('8680343546:AAF3tUFCdLemv7rGCoq_oM1p_u19qYp7Y0w')
 
-# Твой новый рабочий токен
-TOKEN = "8680343546:AAF3tUFCdLemv7rGCoqfUyQixdQtelZ1fU8"
+# ТУТ ПРОСТО ЗАМЕНИ ТЕКСТ НА СВОИ УРОКИ
+schedule = {
+    "Понедельник": "1. Математика\n2. Русский язык\n3. История",
+    "Вторник": "1. Физика\n2. Химия\n3. Биология",
+    "Среда": "1. Английский\n2. Физкультура",
+    "Четверг": "1. География\n2. Литература",
+    "Пятница": "1. Информатика\n2. Обществознание"
+}
 
-bot = Bot(token=TOKEN)
-dp = Dispatcher()
+@bot.message_handler(commands=['start'])
+def start(message):
+    # Создаем удобные кнопки внизу
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("Понедельник")
+    btn2 = types.KeyboardButton("Вторник")
+    btn3 = types.KeyboardButton("Среда")
+    btn4 = types.KeyboardButton("Четверг")
+    btn5 = types.KeyboardButton("Пятница")
+    markup.add(btn1, btn2, btn3, btn4, btn5)
+    
+    bot.send_message(message.chat.id, "Привет! Выбери день недели на кнопках ниже 👇", reply_markup=markup)
 
-# Команда /start
-@dp.message(Command("start"))
-async def start_handler(message: types.Message):
-    await message.answer("✅ Бот успешно запущен и готов к работе!\nНапиши /monday или /tuesday")
+@bot.message_handler(content_types=['text'])
+def get_schedule(message):
+    day = message.text
+    if day in schedule:
+        bot.send_message(message.chat.id, f"📅 *{day}*:\n{schedule[day]}", parse_mode="Markdown")
+    else:
+        bot.send_message(message.chat.id, "Пожалуйста, нажми на кнопку с днем недели!")
 
-# Расписание на понедельник
-@dp.message(Command("monday"))
-async def monday_handler(message: types.Message):
-    await message.answer("📅 Понедельник:\n1. Математика\n2. Русский язык\n3. Английский")
-
-# Расписание на вторник
-@dp.message(Command("tuesday"))
-async def tuesday_handler(message: types.Message):
-    await message.answer("📅 Вторник:\n1. Физика\n2. Химия\n3. Биология")
-
-# Главная функция запуска
-async def main():
-    logging.info("Бот выходит в онлайн...")
-    await dp.start_polling(bot)
-
-# Правильный запуск (с двойными подчеркиваниями!)
-if __name__ == "__main__":
-    asyncio.run(main())
+bot.polling(none_stop=True)
